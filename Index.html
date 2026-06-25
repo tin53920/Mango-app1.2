@@ -1,0 +1,1836 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>蜜雪芒果產銷履歷與果園管理系統</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for beautiful agriculture icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Noto Sans TC -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Vue 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        /* Custom print styling */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            body {
+                background-color: white;
+                color: black;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+    <div id="app" class="pb-20 md:pb-6">
+        
+        <!-- TOP NAVIGATION BAR -->
+        <header class="bg-emerald-700 text-white shadow-md sticky top-0 z-50 no-print">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-amber-500 p-2 rounded-lg text-emerald-950 flex items-center justify-center">
+                            <i class="fa-solid fa-seedling text-xl"></i>
+                        </div>
+                        <div>
+                            <span class="text-lg font-bold tracking-wider block">蜜雪芒果履歷助手</span>
+                            <span class="text-xs text-emerald-200 block -mt-1">Orchard Management & Traceability</span>
+                        </div>
+                    </div>
+                    <!-- Desktop Menu -->
+                    <nav class="hidden md:flex space-x-1">
+                        <button v-for="tab in tabs" :key="tab.id" 
+                                @click="currentTab = tab.id"
+                                :class="['px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center space-x-1.5', 
+                                         currentTab === tab.id ? 'bg-emerald-800 text-amber-300 shadow-inner' : 'hover:bg-emerald-600 text-emerald-100']">
+                            <i :class="tab.icon"></i>
+                            <span>{{ tab.name }}</span>
+                        </button>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <!-- MOBILE BOTTOM NAVIGATION BAR -->
+        <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-lg z-50 flex justify-around py-2 no-print">
+            <button v-for="tab in tabs" :key="tab.id" 
+                    @click="currentTab = tab.id"
+                    :class="['flex flex-col items-center justify-center flex-1 py-1 transition-all', 
+                             currentTab === tab.id ? 'text-emerald-700 font-bold' : 'text-slate-400']">
+                <i :class="[tab.icon, 'text-base mb-1']"></i>
+                <span class="text-[9px] scale-90">{{ tab.name }}</span>
+            </button>
+        </div>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            
+            <!-- Tab 1: WEATHER & REALTIME AGRICULTURE ADVISORY -->
+            <section v-if="currentTab === 'weather'" class="space-y-6">
+                <!-- Banner Info -->
+                <div class="bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-2xl p-6 shadow-md relative overflow-hidden">
+                    <div class="absolute right-0 bottom-0 opacity-10 text-9xl -mr-10 -mb-10">
+                        <i class="fa-solid fa-cloud-sun-rain"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <div class="flex items-center space-x-2 bg-emerald-800/40 w-fit px-3 py-1 rounded-full text-xs font-semibold mb-3">
+                            <i class="fa-solid fa-location-dot"></i>
+                            <span>預設產區：台南市玉井區 (TID: 6702500)</span>
+                        </div>
+                        <h1 class="text-2xl md:text-3xl font-bold">即時天氣與芒果栽培警示</h1>
+                        <p class="text-emerald-100 mt-1 text-sm md:text-base">結合中央氣象署觀測數據，為您的蜜雪幼苗提供最科學的栽培方針。</p>
+                        <a href="https://www.cwa.gov.tw/V8/C/W/Town/Town.html?TID=6702500" target="_blank" class="inline-flex items-center mt-4 text-xs bg-amber-500 hover:bg-amber-400 text-emerald-950 font-semibold px-4 py-2 rounded-lg transition-colors shadow">
+                            <i class="fa-solid fa-arrow-up-right-from-square mr-2"></i> 前往中央氣象署玉井特報
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Weather Status Board -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Current Conditions Card -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="text-sm font-semibold text-slate-500">當前氣候監測</span>
+                                <span class="text-xs bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full font-medium flex items-center">
+                                    <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-1.5 animate-pulse"></span> 即時模擬數據
+                                </span>
+                            </div>
+                            <div class="flex items-center space-x-4 my-6">
+                                <div class="text-amber-500 text-5xl">
+                                    <i :class="weatherData.icon"></i>
+                                </div>
+                                <div>
+                                    <div class="text-4xl font-extrabold text-slate-800">{{ weatherData.temp }}°C</div>
+                                    <div class="text-sm font-semibold text-slate-500">{{ weatherData.desc }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 border-t border-slate-100 pt-4 text-sm">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-droplet text-blue-500 w-4"></i>
+                                <span class="text-slate-500">濕度:</span>
+                                <span class="font-bold text-slate-700">{{ weatherData.humidity }}%</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-umbrella text-indigo-500 w-4"></i>
+                                <span class="text-slate-500">降雨機率:</span>
+                                <span class="font-bold text-slate-700">{{ weatherData.rainChance }}%</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-wind text-teal-500 w-4"></i>
+                                <span class="text-slate-500">風速:</span>
+                                <span class="font-bold text-slate-700">{{ weatherData.windSpeed }} m/s</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-sun text-orange-500 w-4"></i>
+                                <span class="text-slate-500">紫外線:</span>
+                                <span class="font-bold text-slate-700">{{ weatherData.uvIndex }} (中)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mango Advisory Card -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 lg:col-span-2 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="text-sm font-semibold text-slate-500">蜜雪幼苗 (8個月) 智慧栽培方針</span>
+                                <span class="text-xs bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full font-medium">
+                                    樹勢培養期特別提醒
+                                </span>
+                            </div>
+                            <!-- Advisory message according to simulated weather -->
+                            <div class="space-y-4">
+                                <div class="p-4 rounded-lg bg-amber-50 border-l-4 border-amber-500 flex items-start space-x-3">
+                                    <i class="fa-solid fa-triangle-exclamation text-amber-600 text-lg mt-0.5"></i>
+                                    <div>
+                                        <h4 class="font-bold text-amber-800 text-sm">夏季梅雨高溫多濕警戒</h4>
+                                        <p class="text-xs text-amber-700 mt-1 leading-relaxed">目前正值多雨季節。此天氣型態極易引發<strong>芒果炭疽病</strong>及<strong>細菌性黑斑病</strong>。請隨時檢視您的蜜雪幼苗葉片，如有病斑應在雨停黃昏時，依照推荐藥劑及時施作「套袋前/雨後防治」。</p>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-slate-600">
+                                    <div class="bg-slate-50 p-3 rounded-lg flex items-center space-x-2">
+                                        <i class="fa-solid fa-scissors text-emerald-600 text-sm"></i>
+                                        <span><strong>幼期整枝提示：</strong> 勿在此時留花！如有花穗請務必從基部修剪，確保樹骨順利生長。</span>
+                                    </div>
+                                    <div class="bg-slate-50 p-3 rounded-lg flex items-center space-x-2">
+                                        <i class="fa-solid fa-faucet-drip text-blue-600 text-sm"></i>
+                                        <span><strong>水分調節管理：</strong> 幼苗根系尚淺，若遇連續晴天需適度補充水份，維持土壤濕潤但裝水不積水。</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center border-t border-slate-100 pt-4 mt-4">
+                            <span class="text-xs text-slate-400">數據更新時間：{{ weatherData.updateTime }}</span>
+                            <button @click="refreshWeather" class="text-xs text-emerald-700 hover:text-emerald-800 font-semibold flex items-center space-x-1">
+                                <i class="fa-solid fa-arrows-rotate" :class="{'animate-spin': isRefreshingWeather}"></i>
+                                <span>更新天氣資訊</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Agricultural Quick Links -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+                    <h3 class="text-sm font-semibold text-slate-700 mb-4 flex items-center space-x-2">
+                        <i class="fa-solid fa-graduation-cap text-emerald-600"></i>
+                        <span>農業技術快速參考工具</span>
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <a href="https://pesticide.baphiq.gov.tw/information/Query/Bug" target="_blank" class="p-3 bg-emerald-50/50 hover:bg-emerald-50 rounded-lg border border-emerald-100 text-center transition group">
+                            <i class="fa-solid fa-bug text-emerald-600 group-hover:scale-110 transition-transform mb-2 text-lg block"></i>
+                            <span class="text-xs font-medium text-slate-700 block">病蟲害診斷</span>
+                        </a>
+                        <a href="https://pesticide.baphiq.gov.tw/information/Query/Pesticide" target="_blank" class="p-3 bg-emerald-50/50 hover:bg-emerald-50 rounded-lg border border-emerald-100 text-center transition group">
+                            <i class="fa-solid fa-flask text-emerald-600 group-hover:scale-110 transition-transform mb-2 text-lg block"></i>
+                            <span class="text-xs font-medium text-slate-700 block">推薦農藥查詢</span>
+                        </a>
+                        <a href="https://mportal.kdais.gov.tw" target="_blank" class="p-3 bg-emerald-50/50 hover:bg-emerald-50 rounded-lg border border-emerald-100 text-center transition group">
+                            <i class="fa-solid fa-leaf text-emerald-600 group-hover:scale-110 transition-transform mb-2 text-lg block"></i>
+                            <span class="text-xs font-medium text-slate-700 block">高雄農改場專區</span>
+                        </a>
+                        <a href="https://tgap.moa.gov.tw/" target="_blank" class="p-3 bg-emerald-50/50 hover:bg-emerald-50 rounded-lg border border-emerald-100 text-center transition group">
+                            <i class="fa-solid fa-file-contract text-emerald-600 group-hover:scale-110 transition-transform mb-2 text-lg block"></i>
+                            <span class="text-xs font-medium text-slate-700 block">TGAP生產履歷規範</span>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 2: ORCHARD MANAGEMENT RECORD FORM -->
+            <section v-if="currentTab === 'record-form'" class="max-w-3xl mx-auto">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                    <!-- Form Header -->
+                    <div class="bg-emerald-700 text-white px-6 py-4 flex items-center space-x-3">
+                        <i class="fa-solid fa-pen-to-square text-xl"></i>
+                        <div>
+                            <h2 class="font-bold text-lg">新增果園田間管理作業</h2>
+                            <p class="text-xs text-emerald-100">填寫下方欄位，將資料存入生產履歷資料庫</p>
+                        </div>
+                    </div>
+
+                    <!-- Form Body -->
+                    <form @submit.prevent="submitRecord" class="p-6 space-y-6">
+                        
+                        <!-- 1. Date & Weather -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">作業日期</label>
+                                <input type="date" v-model="form.date" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">天氣概況</label>
+                                <select v-model="form.weather" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                                    <option value="晴天">☀️ 晴天</option>
+                                    <option value="多雲">☁️ 多雲</option>
+                                    <option value="陰天">☁️ 陰天</option>
+                                    <option value="陣雨">🌧️ 陣雨</option>
+                                    <option value="豪大雨">⛈️ 豪大雨</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- 2. Orchard Area & Mango Varieties -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                                    果園作業區塊
+                                    <span class="text-[10px] text-emerald-600 font-normal ml-1">(可在基礎資料新增)</span>
+                                </label>
+                                <select v-model="form.block" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                                    <option value="" disabled>-- 請選擇作業區塊 --</option>
+                                    <option v-for="b in baseData.blocks" :key="b" :value="b">{{ b }}</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">種植芒果品種 (可複選)</label>
+                                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 max-h-[140px] overflow-y-auto space-y-2">
+                                    <div v-for="variety in varietiesList" :key="variety" class="flex items-center">
+                                        <input type="checkbox" :id="'var-' + variety" :value="variety" v-model="form.varieties" class="rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4">
+                                        <label :for="'var-' + variety" class="ml-2 text-sm text-slate-700 cursor-pointer select-none">
+                                            {{ variety }}
+                                            <span v-if="variety === '蜜雪'" class="bg-rose-100 text-rose-700 text-[10px] px-1.5 py-0.5 rounded font-bold ml-1">主力幼苗</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <p class="text-[10px] text-slate-400 mt-1">已選品種：{{ form.varieties.join('、') || '尚未選擇' }}</p>
+                            </div>
+                        </div>
+
+                        <!-- 3. Operation Categories -->
+                        <div class="border-t border-slate-100 pt-6">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">果園作業項目</label>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                                <button type="button" @click="setOperationType('1')" :class="['px-3 py-3 rounded-xl border text-left transition flex flex-col justify-between h-20', form.opType === '1' ? 'border-emerald-500 bg-emerald-50 text-emerald-800' : 'border-slate-200 hover:bg-slate-50 text-slate-600']">
+                                    <i class="fa-solid fa-scissors text-base"></i>
+                                    <span class="text-xs font-semibold">1. 修枝、矮化</span>
+                                </button>
+                                <button type="button" @click="setOperationType('3')" :class="['px-3 py-3 rounded-xl border text-left transition flex flex-col justify-between h-20', form.opType === '3' ? 'border-emerald-500 bg-emerald-50 text-emerald-800' : 'border-slate-200 hover:bg-slate-50 text-slate-600']">
+                                    <i class="fa-solid fa-spray-can-sparkles text-base"></i>
+                                    <span class="text-xs font-semibold">2. 噴灑農藥/防治</span>
+                                </button>
+                                <button type="button" @click="setOperationType('4')" :class="['px-3 py-3 rounded-xl border text-left transition flex flex-col justify-between h-20', form.opType === '4' ? 'border-emerald-500 bg-emerald-50 text-emerald-800' : 'border-slate-200 hover:bg-slate-50 text-slate-600']">
+                                    <i class="fa-solid fa-faucet-drip text-base"></i>
+                                    <span class="text-xs font-semibold">3. 灌溉水份管理</span>
+                                </button>
+                                <button type="button" @click="setOperationType('6')" :class="['px-3 py-3 rounded-xl border text-left transition flex flex-col justify-between h-20', form.opType === '6' ? 'border-emerald-500 bg-emerald-50 text-emerald-800' : 'border-slate-200 hover:bg-slate-50 text-slate-600']">
+                                    <i class="fa-solid fa-basket-shopping text-base text-amber-600"></i>
+                                    <span class="text-xs font-semibold">4. 果實採收</span>
+                                </button>
+                                <button type="button" @click="setOperationType('5')" :class="['px-3 py-3 rounded-xl border text-left transition flex flex-col justify-between h-20', form.opType === '5' ? 'border-emerald-500 bg-emerald-50 text-emerald-800' : 'border-slate-200 hover:bg-slate-50 text-slate-600']">
+                                    <i class="fa-solid fa-ellipsis text-base"></i>
+                                    <span class="text-xs font-semibold">5. 其他作業</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Sub-options for Operations -->
+                        <div class="bg-slate-50 rounded-xl p-4 border border-slate-150 space-y-4">
+                            <!-- Worker Selection -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                                    作業執行人員 (可複選)
+                                    <span class="text-[10px] text-emerald-600 font-normal ml-1">(可在基礎資料新增)</span>
+                                </label>
+                                <div class="bg-white border border-slate-200 rounded-lg p-3 max-h-[140px] overflow-y-auto space-y-2">
+                                    <div v-for="w in baseData.workers" :key="w" class="flex items-center">
+                                        <input type="checkbox" :id="'worker-' + w" :value="w" v-model="form.workers" class="rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4">
+                                        <label :for="'worker-' + w" class="ml-2 text-sm text-slate-700 cursor-pointer select-none">{{ w }}</label>
+                                    </div>
+                                </div>
+                                <p class="text-[10px] text-slate-400 mt-1">已選人員：{{ form.workers.join('、') || '尚未選擇' }}</p>
+                            </div>
+
+                            <!-- If 3. Pesticide is selected -->
+                            <div v-if="form.opType === '3'" class="space-y-4 border-t border-slate-200 pt-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">防治目的</label>
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                        <label class="flex items-center bg-white border border-slate-200 rounded-lg px-3 py-2 cursor-pointer hover:bg-slate-50 text-xs">
+                                            <input type="radio" value="病蟲害管理" v-model="form.pesticidePurpose" class="text-emerald-600 focus:ring-emerald-500 mr-2">
+                                            <span>(1) 病蟲害管理</span>
+                                        </label>
+                                        <label class="flex items-center bg-white border border-slate-200 rounded-lg px-3 py-2 cursor-pointer hover:bg-slate-50 text-xs">
+                                            <input type="radio" value="除草" v-model="form.pesticidePurpose" class="text-emerald-600 focus:ring-emerald-500 mr-2">
+                                            <span>(2) 除草</span>
+                                        </label>
+                                        <label class="flex items-center bg-white border border-slate-200 rounded-lg px-3 py-2 cursor-pointer hover:bg-slate-50 text-xs">
+                                            <input type="radio" value="套袋前防治" v-model="form.pesticidePurpose" class="text-emerald-600 focus:ring-emerald-500 mr-2">
+                                            <span>(3) 套袋前防治</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">資材/農藥品名與配方</label>
+                                    <select v-model="form.pesticideName" class="w-full bg-white border border-slate-200 rounded-lg px-4 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+                                        <option value="" disabled>-- 請選擇推薦資材 --</option>
+                                        <option v-for="p in baseData.pesticides" :key="p" :value="p">{{ p }}</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- If 6. Harvest is selected -->
+                            <div v-if="form.opType === '6'" class="space-y-4 border-t border-slate-200 pt-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 mb-2">採收總量</label>
+                                        <input type="number" v-model="form.harvestQty" @input="updateHarvestNotes" placeholder="例: 150" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 mb-2">計算單位</label>
+                                        <select v-model="form.harvestUnit" @change="updateHarvestNotes" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none">
+                                            <option value="公斤">公斤 (kg)</option>
+                                            <option value="台斤">台斤</option>
+                                            <option value="箱">箱</option>
+                                            <option value="簍">簍</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 mb-2">果實品質等級</label>
+                                        <select v-model="form.harvestGrade" @change="updateHarvestNotes" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none">
+                                            <option value="特級品">特級品 (外觀無瑕疵)</option>
+                                            <option value="優等品">優等品 (良果)</option>
+                                            <option value="外銷級">外銷級 (嚴選)</option>
+                                            <option value="加工級">加工級/格外品</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- If 5. Other is selected -->
+                            <div v-if="form.opType === '5'" class="border-t border-slate-200 pt-4">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">自訂作業名稱</label>
+                                <input type="text" v-model="form.customOpName" placeholder="例如：覆蓋雜草蓆、套袋作業、施用有機基肥" class="w-full bg-white border border-slate-200 rounded-lg px-4 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition flex-1">
+                            </div>
+                        </div>
+
+                        <!-- 4. Photo Input Block -->
+                        <div class="border-t border-slate-100 pt-6">
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">作業現場照片 (自動高比例壓縮，保護儲存空間)</label>
+                            <div class="flex items-center space-x-4">
+                                <label class="cursor-pointer bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold px-4 py-3 rounded-lg border border-emerald-200 flex items-center space-x-2 transition">
+                                    <i class="fa-solid fa-camera text-base"></i>
+                                    <span>拍照或上傳現場照</span>
+                                    <input type="file" accept="image/*" class="hidden" @change="handlePhotoUpload">
+                                </label>
+                                <div v-if="form.photo" class="relative w-20 h-20 rounded-lg overflow-hidden border-2 border-emerald-500 shadow-sm">
+                                    <img :src="form.photo" class="w-full h-full object-cover">
+                                    <button type="button" @click="form.photo = ''" class="absolute top-0 right-0 bg-rose-600 text-white rounded-full p-0.5 text-[8px] w-4 h-4 flex items-center justify-center shadow" title="清除照片">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                                <span v-else class="text-xs text-slate-400">目前無夾帶照片 (非必填)</span>
+                            </div>
+                        </div>
+
+                        <!-- 5. Notes & Remarks -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">作業備註與說明</label>
+                            <textarea v-model="form.notes" rows="3" placeholder="請輸入本次作業細節、使用之農機具或異常紀錄狀況..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition"></textarea>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="flex items-center justify-end space-x-3 pt-4 border-t border-slate-100">
+                            <button type="button" @click="resetForm" class="px-4 py-2 text-sm font-semibold text-slate-500 hover:text-slate-700 transition">
+                                清空重填
+                            </button>
+                            <button type="submit" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-6 py-2.5 rounded-lg shadow transition flex items-center space-x-2">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                                <span>儲存作業紀錄</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Tab 3: RECORDS LIST & EXPORT -->
+            <section v-if="currentTab === 'records-list'" class="space-y-6">
+                <!-- Filters Header Card -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 no-print">
+                    <h2 class="font-bold text-lg text-slate-800 mb-4 flex items-center space-x-2">
+                        <i class="fa-solid fa-filter text-emerald-600"></i>
+                        <span>履歷歷史查詢篩選</span>
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <!-- Filter Block -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-2">作業區塊</label>
+                            <select v-model="filters.block" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none">
+                                <option value="">全部區塊</option>
+                                <option v-for="b in baseData.blocks" :key="b" :value="b">{{ b }}</option>
+                            </select>
+                        </div>
+                        <!-- Filter Variety -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-2">芒果品種</label>
+                            <select v-model="filters.variety" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none">
+                                <option value="">全部品種</option>
+                                <option v-for="v in varietiesList" :key="v" :value="v">{{ v }}</option>
+                            </select>
+                        </div>
+                        <!-- Date Start -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-2">開始日期</label>
+                            <input type="date" v-model="filters.startDate" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none">
+                        </div>
+                        <!-- Date End -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-2">結束日期</label>
+                            <input type="date" v-model="filters.endDate" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none">
+                        </div>
+                    </div>
+                    <!-- Actions -->
+                    <div class="flex justify-between items-center mt-6 border-t border-slate-100 pt-4">
+                        <span class="text-xs text-slate-500">篩選出 {{ filteredRecords.length }} 筆符合條件之履歷紀錄</span>
+                        <div class="flex space-x-2">
+                            <button @click="resetFilters" class="px-3 py-2 text-xs font-semibold text-slate-500 hover:text-slate-700">
+                                重設篩選
+                            </button>
+                            <button @click="exportCSV" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-4 py-2 rounded-lg flex items-center space-x-1.5 transition">
+                                <i class="fa-solid fa-file-csv"></i>
+                                <span>匯出 CSV</span>
+                            </button>
+                            <button @click="printResume" class="bg-slate-700 hover:bg-slate-800 text-white font-semibold text-xs px-4 py-2 rounded-lg flex items-center space-x-1.5 transition">
+                                <i class="fa-solid fa-print"></i>
+                                <span>友善列印</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Print Header -->
+                <div class="hidden print-only text-center py-6 border-b-2 border-slate-800">
+                    <h1 class="text-3xl font-black text-slate-900 tracking-wider">農產品生產履歷認證作業清冊</h1>
+                    <p class="text-sm text-slate-600 mt-2">果園名稱：{{ baseData.orchardName || '未命名果園' }} | 輸出日期：{{ getTodayDate() }}</p>
+                </div>
+
+                <!-- Records Table/Cards -->
+                <div v-if="filteredRecords.length > 0" class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    <th class="px-6 py-4">作業日期</th>
+                                    <th class="px-6 py-4">作業區塊</th>
+                                    <th class="px-6 py-4">施作芒果品種</th>
+                                    <th class="px-4 py-4 text-center">現場照片</th>
+                                    <th class="px-6 py-4">作業項目及內容</th>
+                                    <th class="px-6 py-4">資材/採收指標</th>
+                                    <th class="px-6 py-4">作業人員</th>
+                                    <th class="px-6 py-4 text-center no-print">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 text-sm text-slate-600">
+                                <tr v-for="record in filteredRecords" :key="record.id" class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="font-semibold text-slate-800">{{ record.date }}</div>
+                                        <div class="text-[10px] text-slate-400 mt-0.5 flex items-center">
+                                            <i class="fa-solid fa-cloud mr-1"></i> {{ record.weather }}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="bg-emerald-50 text-emerald-700 text-xs font-semibold px-2.5 py-1 rounded-full border border-emerald-100">
+                                            {{ record.block }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-wrap gap-1">
+                                            <span v-for="v in record.varieties" :key="v" class="bg-amber-50 text-amber-800 text-[10px] px-1.5 py-0.5 rounded font-medium">
+                                                {{ v }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <!-- Photo Display Column -->
+                                    <td class="px-4 py-4 text-center whitespace-nowrap">
+                                        <div v-if="record.photo" @click="zoomPhoto(record.photo)" class="cursor-pointer inline-block group relative">
+                                            <img :src="record.photo" class="w-12 h-12 rounded object-cover border border-slate-200 group-hover:opacity-80 transition shadow-sm">
+                                            <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/40 text-white rounded text-[10px] transition">
+                                                <i class="fa-solid fa-magnifying-glass-plus"></i>
+                                            </div>
+                                        </div>
+                                        <span v-else class="text-xs text-slate-300">-</span>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="font-bold text-slate-800 text-xs flex items-center">
+                                            <i :class="getOpIcon(record.opType) + ' text-emerald-600 mr-2'"></i>
+                                            <span>{{ getOpName(record) }}</span>
+                                        </div>
+                                        <p class="text-xs text-slate-500 mt-1 max-w-xs truncate" :title="record.notes">{{ record.notes || '無備註說明' }}</p>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <!-- Pesticide Case -->
+                                        <div v-if="record.opType === '3'" class="text-xs">
+                                            <span class="bg-rose-50 text-rose-700 font-semibold px-2 py-0.5 rounded block w-fit mb-1">{{ record.pesticidePurpose }}</span>
+                                            <span class="font-medium text-slate-700">{{ record.pesticideName || '未指定藥劑' }}</span>
+                                        </div>
+                                        <!-- Harvest Case -->
+                                        <div v-else-if="record.opType === '6'" class="text-xs">
+                                            <span class="bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded block w-fit mb-1">
+                                                {{ record.harvestGrade || '特級品' }}
+                                            </span>
+                                            <span class="font-bold text-emerald-800">
+                                                {{ record.harvestQty || '0' }} {{ record.harvestUnit || '公斤' }}
+                                            </span>
+                                        </div>
+                                        <span v-else class="text-slate-400 text-xs">-</span>
+                                    </td>
+                                    <!-- Worker Multi-Select Rendered list -->
+                                    <td class="px-6 py-4 text-xs font-medium text-slate-700">
+                                        <div class="flex flex-wrap gap-1 max-w-[120px]">
+                                            <span v-for="w in getWorkersArray(record)" :key="w" class="bg-slate-100 text-slate-800 text-[10px] px-1.5 py-0.5 rounded-md">
+                                                {{ w }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center no-print">
+                                        <button @click="deleteRecord(record.id)" class="text-rose-600 hover:text-rose-800 hover:bg-rose-50 p-2 rounded-lg transition" title="刪除本筆紀錄">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div v-else class="text-center py-16 bg-white rounded-xl border border-dashed border-slate-200">
+                    <div class="bg-slate-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
+                        <i class="fa-solid fa-folder-open text-2xl"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-700">目前沒有生產作業紀錄</h3>
+                    <p class="text-sm text-slate-400 mt-1">請嘗試調整您的篩選條件，或是到「田間管理紀錄」新增一筆作業。</p>
+                </div>
+            </section>
+
+            <!-- Tab 5: HARVEST AUCTION MARKET PRICE -->
+            <section v-if="currentTab === 'market'" class="space-y-6">
+                <!-- AMIS Simulated Daily Market Quick Glance (NOT printed) -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 no-print">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-slate-100 pb-4">
+                        <div>
+                            <span class="text-xs bg-amber-500 text-amber-950 font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">AMIS 市場行情</span>
+                            <h2 class="text-xl font-bold text-slate-800 mt-1 flex items-center">
+                                <i class="fa-solid fa-chart-line text-emerald-600 mr-2"></i>
+                                <span>芒果批發市場交易行情 (今日概況)</span>
+                            </h2>
+                        </div>
+                        <span class="text-xs text-slate-400 mt-2 md:mt-0">
+                            資料參考來源：行政院農委會農產品批發市場交易行情站
+                        </span>
+                    </div>
+
+                    <!-- AMIS Mock Price Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500">
+                                    <th class="px-4 py-3">市場</th>
+                                    <th class="px-4 py-3">品種</th>
+                                    <th class="px-4 py-3 text-right">上價 (元/公斤)</th>
+                                    <th class="px-4 py-3 text-right">中價 (元/公斤)</th>
+                                    <th class="px-4 py-3 text-right">下價 (元/公斤)</th>
+                                    <th class="px-4 py-3 text-right text-emerald-700">平均價 (元/公斤)</th>
+                                    <th class="px-4 py-3 text-right">平均價 (元/台斤)</th>
+                                    <th class="px-4 py-3 text-right">交易量 (公斤)</th>
+                                    <th class="px-4 py-3 text-center">趨勢</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 text-xs text-slate-600">
+                                <tr v-for="mPrice in mockAmisPrices" :key="mPrice.market + mPrice.variety" class="hover:bg-slate-50">
+                                    <td class="px-4 py-3 font-semibold text-slate-800">{{ mPrice.market }}</td>
+                                    <td class="px-4 py-3">
+                                        <span class="bg-rose-50 text-rose-700 font-bold px-1.5 py-0.5 rounded text-[10px]">{{ mPrice.variety }}</span>
+                                    </td>
+                                    <td class="px-4 py-3 text-right font-medium">{{ mPrice.high }}</td>
+                                    <td class="px-4 py-3 text-right font-medium">{{ mPrice.mid }}</td>
+                                    <td class="px-4 py-3 text-right font-medium">{{ mPrice.low }}</td>
+                                    <td class="px-4 py-3 text-right font-bold text-emerald-700 bg-emerald-50/40">{{ mPrice.avg }}</td>
+                                    <td class="px-4 py-3 text-right font-medium text-slate-500">{{ (mPrice.avg / 1.6667).toFixed(1) }}</td>
+                                    <td class="px-4 py-3 text-right font-medium">{{ mPrice.volume.toLocaleString() }}</td>
+                                    <td class="px-4 py-3 text-center font-bold" :class="mPrice.trend === 'up' ? 'text-rose-500' : 'text-emerald-500'">
+                                        <i :class="mPrice.trend === 'up' ? 'fa-solid fa-caret-up' : 'fa-solid fa-caret-down'"></i>
+                                        {{ mPrice.trend === 'up' ? ' 漲' : ' 跌' }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
+                    <!-- Column 1: Record Form (NOT printed) -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden h-fit no-print">
+                        <div class="bg-emerald-700 text-white px-5 py-3.5 flex items-center space-x-2">
+                            <i class="fa-solid fa-circle-plus"></i>
+                            <h3 class="font-bold text-sm">新增出貨自記帳</h3>
+                        </div>
+                        <form @submit.prevent="submitMarketRecord" class="p-5 space-y-4">
+                            <!-- Date & Market -->
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-500 mb-1">交易日期</label>
+                                    <input type="date" v-model="mForm.date" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-500 mb-1">拍賣批發市場</label>
+                                    <select v-model="mForm.market" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs">
+                                        <option value="" disabled>-- 選擇市場 --</option>
+                                        <option v-for="m in baseData.markets" :key="m" :value="m">{{ m }}</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Variety & Block -->
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-500 mb-1">出貨品種</label>
+                                    <select v-model="mForm.variety" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs">
+                                        <option v-for="v in varietiesList" :key="v" :value="v">{{ v }}</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-bold text-slate-500 mb-1">出貨生產區塊</label>
+                                    <select v-model="mForm.block" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs">
+                                        <option value="" disabled>-- 選擇區塊 --</option>
+                                        <option v-for="b in baseData.blocks" :key="b" :value="b">{{ b }}</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Quantity Block -->
+                            <div class="bg-amber-50/50 p-3 rounded-lg border border-amber-100 space-y-3">
+                                <div class="text-[11px] font-extrabold text-amber-800 flex justify-between">
+                                    <span>⚖️ 出貨數量設定 (雙單位連動)</span>
+                                    <span class="font-normal flex items-center"><span class="mr-1">1 公斤 = 1.6667</span>台斤</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-[10px] text-slate-500 mb-0.5">出貨公斤數 (kg)</label>
+                                        <input type="number" step="any" v-model="mForm.qtyKg" @input="convertWeight('kg')" placeholder="0.0" required class="w-full bg-white border border-slate-200 rounded px-2.5 py-1 text-xs font-semibold">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] text-slate-500 mb-0.5">出貨台斤數</label>
+                                        <input type="number" step="any" v-model="mForm.qtyCatty" @input="convertWeight('catty')" placeholder="0.0" required class="w-full bg-white border border-slate-200 rounded px-2.5 py-1 text-xs font-semibold">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Pricing Block -->
+                            <div class="bg-emerald-50/30 p-3 rounded-lg border border-emerald-100 space-y-3">
+                                <div class="text-[11px] font-extrabold text-emerald-800">
+                                    💰 拍賣價格設定
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-[10px] text-slate-500 mb-0.5">拍賣價 (元/公斤)</label>
+                                        <input type="number" step="any" v-model="mForm.priceKg" @input="convertPrice('kg')" placeholder="0.0" required class="w-full bg-white border border-slate-200 rounded px-2.5 py-1 text-xs font-semibold text-emerald-800">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] text-slate-500 mb-0.5">拍賣價 (元/台斤)</label>
+                                        <input type="number" step="any" v-model="mForm.priceCatty" @input="convertPrice('catty')" placeholder="0.0" required class="w-full bg-white border border-slate-200 rounded px-2.5 py-1 text-xs font-semibold text-emerald-800">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Deductible Expenses Block -->
+                            <div class="bg-rose-50/40 p-3 rounded-lg border border-rose-100 space-y-3">
+                                <div class="text-[11px] font-extrabold text-rose-800 flex justify-between">
+                                    <span>💸 扣除事務費用</span>
+                                    <span class="font-normal text-[10px] text-slate-400">人工、裝箱、運費等</span>
+                                </div>
+                                <div>
+                                    <input type="number" step="any" v-model="mForm.expenses" placeholder="請輸入本批次總扣除費用 (元)" class="w-full bg-white border border-slate-200 rounded px-2.5 py-1 text-xs font-semibold text-rose-700">
+                                </div>
+                            </div>
+
+                            <!-- Total Auto display with new Actual Income logic -->
+                            <div class="bg-slate-100 p-3 rounded-lg text-xs space-y-1.5">
+                                <div class="flex justify-between items-center text-slate-500">
+                                    <span>預估收益總計 (毛利)：</span>
+                                    <span class="font-bold">NT$ {{ calculateFormRevenue.toLocaleString() }} 元</span>
+                                </div>
+                                <div class="flex justify-between items-center border-t border-slate-200 pt-1.5">
+                                    <span class="font-bold text-slate-700">當日實際收入 (淨利)：</span>
+                                    <span class="text-base font-black text-emerald-700">NT$ {{ actualFormIncome.toLocaleString() }} 元</span>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2 rounded-lg text-xs transition flex items-center justify-center space-x-1.5 shadow">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                                <span>存入出貨自記帳庫</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Column 2 & 3: Reports & Totals (Only this is printed) -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 lg:col-span-2 space-y-6 print:p-0 print:border-none print:shadow-none">
+                        <!-- Filter & Report controls (NOT printed) -->
+                        <div class="border-b border-slate-100 pb-4 no-print">
+                            <h3 class="font-bold text-sm text-slate-800 mb-3 flex items-center space-x-2">
+                                <i class="fa-solid fa-receipt text-emerald-600"></i>
+                                <span>自建出貨明細與篩選</span>
+                            </h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-[10px] font-semibold text-slate-500 mb-1">開始日期</label>
+                                    <input type="date" v-model="mFilters.startDate" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-700">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-semibold text-slate-500 mb-1">結束日期</label>
+                                    <input type="date" v-model="mFilters.endDate" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-700">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-semibold text-slate-500 mb-1">芒果品種</label>
+                                    <select v-model="mFilters.variety" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-slate-700">
+                                        <option value="">全部品種</option>
+                                        <option v-for="v in varietiesList" :key="v" :value="v">{{ v }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="flex justify-end space-x-2 mt-4 pt-3 border-t border-slate-100">
+                                <button @click="resetMFilters" class="text-xs text-slate-400 hover:text-slate-600 px-2 py-1">
+                                    重置
+                                </button>
+                                <button @click="exportMarketCSV" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-3 py-1.5 rounded-lg flex items-center space-x-1 transition">
+                                    <i class="fa-solid fa-file-csv"></i>
+                                    <span>匯出出貨拍賣紀錄 CSV</span>
+                                </button>
+                                <button @click="printResume" class="bg-slate-700 hover:bg-slate-800 text-white font-semibold text-xs px-3 py-1.5 rounded-lg flex items-center space-x-1 transition">
+                                    <i class="fa-solid fa-print"></i>
+                                    <span>列印出貨拍賣紀錄</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Print only title for market report -->
+                        <div class="hidden print-only text-center py-4 border-b">
+                            <h2 class="text-2xl font-black text-slate-900">蜜雪芒果出貨拍賣自記帳明細與收益分析表</h2>
+                            <p class="text-xs text-slate-500 mt-1">果園名稱：{{ baseData.orchardName }} | 列印日期：{{ getTodayDate() }}</p>
+                        </div>
+
+                        <!-- Market Records Table (Actual users data, Printed) -->
+                        <div class="overflow-x-auto" v-if="filteredMarketRecords.length > 0">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                        <th class="px-3 py-3">交易日期</th>
+                                        <th class="px-3 py-3">批發市場</th>
+                                        <th class="px-3 py-3">生產區塊</th>
+                                        <th class="px-3 py-3">出貨品種</th>
+                                        <th class="px-3 py-3 text-right">出貨重量</th>
+                                        <th class="px-3 py-3 text-right">成交均價</th>
+                                        <th class="px-3 py-3 text-right text-slate-700">收益總計</th>
+                                        <th class="px-3 py-3 text-right text-rose-700">扣除事務費</th>
+                                        <th class="px-3 py-3 text-right text-emerald-800 bg-emerald-50/50">當日實際收入</th>
+                                        <th class="px-3 py-3 text-center no-print">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 text-xs text-slate-600">
+                                    <tr v-for="rec in filteredMarketRecords" :key="rec.id" class="hover:bg-slate-50 transition-colors">
+                                        <td class="px-3 py-3 whitespace-nowrap font-medium text-slate-800">{{ rec.date }}</td>
+                                        <td class="px-3 py-3 font-semibold text-emerald-700">{{ rec.market }}</td>
+                                        <td class="px-3 py-3 text-slate-500">{{ rec.block }}</td>
+                                        <td class="px-3 py-3">
+                                            <span class="bg-amber-50 text-amber-800 px-1.5 py-0.5 rounded font-medium">{{ rec.variety }}</span>
+                                        </td>
+                                        <!-- Weight Double Line compact view -->
+                                        <td class="px-3 py-3 text-right font-medium">
+                                            <div>{{ Number(rec.qtyKg).toFixed(1) }} <span class="text-[9px] text-slate-400">kg</span></div>
+                                            <div class="text-[10px] text-slate-400 font-normal">{{ Number(rec.qtyCatty).toFixed(1) }} 台斤</div>
+                                        </td>
+                                        <!-- Price Double Line compact view -->
+                                        <td class="px-3 py-3 text-right">
+                                            <div class="font-bold text-slate-700">{{ Number(rec.priceKg).toFixed(1) }} <span class="text-[9px] font-normal text-slate-400">元/kg</span></div>
+                                            <div class="text-[10px] text-slate-400 font-normal">{{ Number(rec.priceCatty).toFixed(1) }} 元/台斤</div>
+                                        </td>
+                                        <!-- Gross Revenue -->
+                                        <td class="px-3 py-3 text-right font-bold text-slate-700">
+                                            {{ Math.round(rec.qtyKg * rec.priceKg).toLocaleString() }}
+                                        </td>
+                                        <!-- Deducted Expenses -->
+                                        <td class="px-3 py-3 text-right font-bold text-rose-600 bg-rose-50/20">
+                                            -{{ Number(rec.expenses || 0).toLocaleString() }}
+                                        </td>
+                                        <!-- Net Actual Income -->
+                                        <td class="px-3 py-3 text-right font-black text-emerald-800 bg-emerald-50">
+                                            {{ Math.round((rec.qtyKg * rec.priceKg) - (rec.expenses || 0)).toLocaleString() }}
+                                        </td>
+                                        <td class="px-3 py-3 text-center no-print">
+                                            <button @click="deleteMarketRecord(rec.id)" class="text-rose-600 hover:text-rose-800 p-1" title="刪除紀錄">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <!-- TOTAL ROW -->
+                                    <tr class="bg-emerald-50 border-t-2 border-emerald-300 font-bold text-emerald-950">
+                                        <td colspan="4" class="px-3 py-4 text-center text-sm font-black">
+                                            加總 / 全期加權出貨平均
+                                        </td>
+                                        <!-- Total Weight -->
+                                        <td class="px-3 py-4 text-right text-xs">
+                                            <div>{{ totalMarketStats.totalKg.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1}) }} <span class="text-[9px] font-normal">kg</span></div>
+                                            <div class="text-[10px] font-normal text-slate-600">{{ totalMarketStats.totalCatty.toLocaleString(undefined, {minimumFractionDigits: 1, maximumFractionDigits: 1}) }} 台斤</div>
+                                        </td>
+                                        <!-- Weighted Prices -->
+                                        <td class="px-3 py-4 text-right text-xs">
+                                            <div class="text-emerald-900">{{ totalMarketStats.weightedPriceKg.toFixed(1) }} <span class="text-[9px] font-normal">元/kg</span></div>
+                                            <div class="text-[10px] font-normal text-slate-600">{{ totalMarketStats.weightedPriceCatty.toFixed(1) }} 元/台斤</div>
+                                        </td>
+                                        <!-- Total Gross Revenue -->
+                                        <td class="px-3 py-4 text-right text-xs text-slate-700">
+                                            {{ totalMarketStats.totalRevenue.toLocaleString() }}
+                                        </td>
+                                        <!-- Total Expenses -->
+                                        <td class="px-3 py-4 text-right text-xs text-rose-700 bg-rose-100/30">
+                                            -{{ totalMarketStats.totalExpenses.toLocaleString() }}
+                                        </td>
+                                        <!-- Total Net Actual Income -->
+                                        <td class="px-3 py-4 text-right text-sm font-black text-emerald-950 bg-emerald-100">
+                                            NT$ {{ totalMarketStats.totalActualIncome.toLocaleString() }}
+                                        </td>
+                                        <td class="no-print"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div v-else class="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                            <div class="text-slate-400 text-3xl mb-2">
+                                <i class="fa-solid fa-scale-unbalanced-left"></i>
+                            </div>
+                            <h4 class="font-bold text-slate-700">尚無出貨自記帳明細</h4>
+                            <p class="text-xs text-slate-400 mt-1">請利用左側表單輸入您的出貨與成交行情，系統將自動為您生成完整收益報表。</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 6: BASIC SETTINGS -->
+            <section v-if="currentTab === 'settings'" class="space-y-6">
+                <!-- Orchard Basic Settings Header -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+                    <h2 class="font-bold text-lg text-slate-800 mb-4 flex items-center space-x-2">
+                        <i class="fa-solid fa-id-card text-emerald-600"></i>
+                        <span>果園基本檔案設定</span>
+                    </h2>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-2">農場/果園名稱</label>
+                        <div class="flex space-x-2">
+                            <input type="text" v-model="baseData.orchardName" placeholder="例如：玉井蜜雪芒果園" class="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition flex-1">
+                            <button @click="saveOrchardName" class="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold px-4 py-2 rounded-lg transition">
+                                儲存名稱
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Multiple Management Card Grids (Updated to 5 cards grid layout) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    
+                    <!-- 1. Workers Settings -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-bold text-slate-800 text-sm flex items-center space-x-2">
+                                    <i class="fa-solid fa-users text-emerald-600"></i>
+                                    <span>作業人員名單</span>
+                                </h3>
+                                <span class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-medium">
+                                    {{ baseData.workers.length }} 位成員
+                                </span>
+                            </div>
+                            <!-- List -->
+                            <div class="space-y-2 max-h-[200px] overflow-y-auto mb-4 pr-1">
+                                <div v-for="(w, idx) in baseData.workers" :key="idx" class="flex justify-between items-center bg-slate-50 px-3 py-2 rounded-lg text-sm">
+                                    <span class="font-medium text-slate-700">{{ w }}</span>
+                                    <button @click="removeItem('workers', idx)" class="text-rose-600 hover:text-rose-800 text-xs">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2 border-t border-slate-100 pt-4">
+                            <input type="text" v-model="newItem.worker" placeholder="新增人員姓名..." @keyup.enter="addItem('workers', 'worker')" class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-700 focus:outline-none flex-1">
+                            <button @click="addItem('workers', 'worker')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                                新增
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 2. Orchard Blocks Settings -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-bold text-slate-800 text-sm flex items-center space-x-2">
+                                    <i class="fa-solid fa-map-location-dot text-emerald-600"></i>
+                                    <span>果園作業區塊</span>
+                                </h3>
+                                <span class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-medium">
+                                    {{ baseData.blocks.length }} 個區塊
+                                </span>
+                            </div>
+                            <!-- List -->
+                            <div class="space-y-2 max-h-[200px] overflow-y-auto mb-4 pr-1">
+                                <div v-for="(b, idx) in baseData.blocks" :key="idx" class="flex justify-between items-center bg-slate-50 px-3 py-2 rounded-lg text-sm">
+                                    <span class="font-medium text-slate-700">{{ b }}</span>
+                                    <button @click="removeItem('blocks', idx)" class="text-rose-600 hover:text-rose-800 text-xs">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2 border-t border-slate-100 pt-4">
+                            <input type="text" v-model="newItem.block" placeholder="新增作業區塊 (例: A區-蜜雪幼苗)..." @keyup.enter="addItem('blocks', 'block')" class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-700 focus:outline-none flex-1">
+                            <button @click="addItem('blocks', 'block')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                                新增
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 3. Pesticides/Inputs Settings -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-bold text-slate-800 text-sm flex items-center space-x-2">
+                                    <i class="fa-solid fa-vial text-emerald-600"></i>
+                                    <span>防治農藥及資材品名</span>
+                                </h3>
+                                <span class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-medium">
+                                    {{ baseData.pesticides.length }} 種資材
+                                </span>
+                            </div>
+                            <!-- List -->
+                            <div class="space-y-2 max-h-[200px] overflow-y-auto mb-4 pr-1">
+                                <div v-for="(p, idx) in baseData.pesticides" :key="idx" class="flex justify-between items-center bg-slate-50 px-3 py-2 rounded-lg text-sm">
+                                    <span class="font-medium text-slate-700 text-xs truncate max-w-[200px]">{{ p }}</span>
+                                    <button @click="removeItem('pesticides', idx)" class="text-rose-600 hover:text-rose-800 text-xs">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2 border-t border-slate-100 pt-4">
+                            <input type="text" v-model="newItem.pesticide" placeholder="新增防護農藥配方..." @keyup.enter="addItem('pesticides', 'pesticide')" class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-700 focus:outline-none flex-1">
+                            <button @click="addItem('pesticides', 'pesticide')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                                新增
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 4. Machinery Settings -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-bold text-slate-800 text-sm flex items-center space-x-2">
+                                    <i class="fa-solid fa-tractor text-emerald-600"></i>
+                                    <span>農機具名冊</span>
+                                </h3>
+                                <span class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-medium">
+                                    {{ baseData.machineries.length }} 項機具
+                                </span>
+                            </div>
+                            <!-- List -->
+                            <div class="space-y-2 max-h-[200px] overflow-y-auto mb-4 pr-1">
+                                <div v-for="(m, idx) in baseData.machineries" :key="idx" class="flex justify-between items-center bg-slate-50 px-3 py-2 rounded-lg text-sm">
+                                    <span class="font-medium text-slate-700">{{ m }}</span>
+                                    <button @click="removeItem('machineries', idx)" class="text-rose-600 hover:text-rose-800 text-xs">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2 border-t border-slate-100 pt-4">
+                            <input type="text" v-model="newItem.machinery" placeholder="新增農用機具..." @keyup.enter="addItem('machineries', 'machinery')" class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-700 focus:outline-none flex-1">
+                            <button @click="addItem('machineries', 'machinery')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                                新增
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 5. Dynamic Market Settings (New Feature added as requested) -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-bold text-slate-800 text-sm flex items-center space-x-2">
+                                    <i class="fa-solid fa-shop text-emerald-600"></i>
+                                    <span>拍賣市場名冊</span>
+                                </h3>
+                                <span class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-medium">
+                                    {{ baseData.markets.length }} 個管道
+                                </span>
+                            </div>
+                            <!-- List -->
+                            <div class="space-y-2 max-h-[200px] overflow-y-auto mb-4 pr-1">
+                                <div v-for="(m, idx) in baseData.markets" :key="idx" class="flex justify-between items-center bg-slate-50 px-3 py-2 rounded-lg text-sm">
+                                    <span class="font-medium text-slate-700">{{ m }}</span>
+                                    <button @click="removeItem('markets', idx)" class="text-rose-600 hover:text-rose-800 text-xs">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2 border-t border-slate-100 pt-4">
+                            <input type="text" v-model="newItem.market" placeholder="新增拍賣管道 (例: 外銷-日本)..." @keyup.enter="addItem('markets', 'market')" class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-700 focus:outline-none flex-1">
+                            <button @click="addItem('markets', 'market')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                                新增
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+        </main>
+
+        <!-- PHOTO ENLARGEMENT MODAL (LIGHTBOX) -->
+        <div v-if="zoomedPhotoUrl" @click="zoomedPhotoUrl = ''" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 transition-all animate-fade-in no-print">
+            <div class="relative max-w-4xl max-h-[90vh] bg-white p-2 rounded-2xl shadow-2xl" @click.stop>
+                <img :src="zoomedPhotoUrl" class="max-w-full max-h-[80vh] rounded-xl object-contain">
+                <div class="absolute top-4 right-4 flex space-x-2">
+                    <button @click="zoomedPhotoUrl = ''" class="bg-black/60 hover:bg-black/80 text-white w-10 h-10 rounded-full flex items-center justify-center transition shadow">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+                <div class="text-center text-xs text-slate-500 py-2 font-medium">生產履歷作業現場照</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- UI Interaction logic written in Vue 3 -->
+    <script>
+        const { createApp, ref, reactive, computed, onMounted, watch } = Vue;
+
+        createApp({
+            setup() {
+                // Static list of Mango varieties
+                const varietiesList = ['愛文', '慢文', '金煌', '西施', '夏雪', '蜜雪', '凱特', '黑香', '玉文6', '慢玉文6'];
+
+                // Navigation Tabs config
+                const tabs = [
+                    { id: 'weather', name: '天氣農事建議', icon: 'fa-solid fa-cloud-sun' },
+                    { id: 'record-form', name: '田間管理紀錄', icon: 'fa-solid fa-file-signature' },
+                    { id: 'records-list', name: '生產履歷明細', icon: 'fa-solid fa-list-check' },
+                    { id: 'market', name: '出貨拍賣紀錄', icon: 'fa-solid fa-chart-line' },
+                    { id: 'settings', name: '基礎資料建立', icon: 'fa-solid fa-sliders' }
+                ];
+                
+                const currentTab = ref('weather');
+                const zoomedPhotoUrl = ref(''); // Modal light-box state
+
+                // Weather Simulation Data State
+                const weatherData = reactive({
+                    temp: '31.2',
+                    desc: '晴時多雲',
+                    icon: 'fa-solid fa-cloud-sun',
+                    humidity: '72',
+                    rainChance: '20',
+                    windSpeed: '2.8',
+                    uvIndex: '8',
+                    updateTime: ''
+                });
+
+                const isRefreshingWeather = ref(false);
+
+                // Initialize updating time for weather
+                const updateWeatherTime = () => {
+                    const now = new Date();
+                    weatherData.updateTime = now.toLocaleString('zh-TW', { hour12: false });
+                };
+
+                const refreshWeather = () => {
+                    isRefreshingWeather.value = true;
+                    setTimeout(() => {
+                        const randTemp = (29 + Math.random() * 4).toFixed(1);
+                        const randHumid = Math.floor(60 + Math.random() * 30);
+                        const randRain = Math.floor(Math.random() * 95);
+                        weatherData.temp = randTemp;
+                        weatherData.humidity = randHumid;
+                        weatherData.rainChance = randRain;
+                        if (randRain > 60) {
+                            weatherData.desc = '陣雨';
+                            weatherData.icon = 'fa-solid fa-cloud-showers-heavy';
+                        } else if (randRain > 30) {
+                            weatherData.desc = '多雲短暫陣雨';
+                            weatherData.icon = 'fa-solid fa-cloud-sun-rain';
+                        } else if (Math.random() > 0.5) {
+                            weatherData.desc = '晴時多雲';
+                            weatherData.icon = 'fa-solid fa-cloud-sun';
+                        } else {
+                            weatherData.desc = '晴朗天';
+                            weatherData.icon = 'fa-solid fa-sun';
+                        }
+                        updateWeatherTime();
+                        isRefreshingWeather.value = false;
+                    }, 800);
+                };
+
+                // Base Data Library (Added dynamic markets array to fulfill user query)
+                const baseData = reactive({
+                    orchardName: '玉井第一產銷班蜜雪果園',
+                    workers: ['阿昌 (班長)', '美玲', '小明', '陳大哥'],
+                    blocks: ['A區-蜜雪幼苗區', 'B區-愛文老樹區', 'C區-坡地金煌區'],
+                    pesticides: [
+                        '亞托敏 (炭疽病防護)', 
+                        '賽普護汰寧 (黑斑病防治)', 
+                        '益達胺 (防薊馬/葉蟬)', 
+                        '嘉賜銅 (細菌性黑斑防治)', 
+                        '蘇力菌 (鱗翅目螟蛾防治)', 
+                        '無毒除草防草蓆'
+                    ],
+                    machineries: ['背負式動力噴霧機', '自走式除草機', '噴灌滴灌系統', '搬運車'],
+                    markets: ['台北一', '台北二', '三重', '台中', '高雄', '屏東', '外銷-日本'] // Dynamic markets config
+                });
+
+                // Fields for adding new items in settings
+                const newItem = reactive({
+                    worker: '',
+                    block: '',
+                    pesticide: '',
+                    machinery: '',
+                    market: '' // New dynamic category input support
+                });
+
+                // Records Database State
+                const records = ref([]);
+                const marketRecords = ref([]); // Database state for tab 5
+
+                // AMIS Mock Pricing Data
+                const mockAmisPrices = [
+                    { market: '台北一', variety: '蜜雪', high: 165.0, mid: 120.0, low: 75.0, avg: 122.5, volume: 1850, trend: 'up' },
+                    { market: '台北二', variety: '蜜雪', high: 172.0, mid: 125.0, low: 80.0, avg: 128.0, volume: 1200, trend: 'up' },
+                    { market: '台北一', variety: '愛文', high: 140.0, mid: 95.0, low: 50.0, avg: 98.2, volume: 14200, trend: 'down' },
+                    { market: '台北二', variety: '愛文', high: 145.0, mid: 100.0, low: 55.0, avg: 102.5, volume: 9800, trend: 'up' },
+                    { market: '台中市場', variety: '金煌', high: 75.0, mid: 50.0, low: 35.0, avg: 52.8, volume: 8400, trend: 'down' },
+                    { market: '高雄市場', variety: '蜜雪', high: 150.0, mid: 110.0, low: 70.0, avg: 112.0, volume: 950, trend: 'up' }
+                ];
+
+                // Form Fields State
+                const getTodayDate = () => {
+                    const today = new Date();
+                    const yyyy = today.getFullYear();
+                    const mm = String(today.getMonth() + 1).padStart(2, '0');
+                    const dd = String(today.getDate()).padStart(2, '0');
+                    return `${yyyy}-${mm}-${dd}`;
+                };
+
+                const form = reactive({
+                    date: getTodayDate(),
+                    weather: '多雲',
+                    block: '',
+                    varieties: ['蜜雪'],
+                    opType: '1', 
+                    workers: [], 
+                    pesticidePurpose: '病蟲害管理',
+                    pesticideName: '',
+                    harvestQty: '',
+                    harvestUnit: '公斤',
+                    harvestGrade: '特級品',
+                    customOpName: '',
+                    photo: '', 
+                    notes: ''
+                });
+
+                // Tab 5 Market record Form state
+                const mForm = reactive({
+                    date: getTodayDate(),
+                    market: '外銷-日本', // Set default focus to Japan export
+                    block: '',
+                    variety: '蜜雪',
+                    qtyKg: '',
+                    qtyCatty: '',
+                    priceKg: '',
+                    priceCatty: '',
+                    expenses: '' // Deductible expenses field
+                });
+
+                // Tab 5 Market Filters
+                const mFilters = reactive({
+                    startDate: '',
+                    endDate: '',
+                    variety: ''
+                });
+
+                const resetMFilters = () => {
+                    mFilters.startDate = '';
+                    mFilters.endDate = '';
+                    mFilters.variety = '';
+                };
+
+                // Weight conversion helper: 1 kg = 1.6667 catty
+                const convertWeight = (source) => {
+                    if (source === 'kg') {
+                        if (mForm.qtyKg) {
+                            mForm.qtyCatty = Number((mForm.qtyKg * 1.6667).toFixed(2));
+                        } else {
+                            mForm.qtyCatty = '';
+                        }
+                    } else if (source === 'catty') {
+                        if (mForm.qtyCatty) {
+                            mForm.qtyKg = Number((mForm.qtyCatty / 1.6667).toFixed(2));
+                        } else {
+                            mForm.qtyKg = '';
+                        }
+                    }
+                };
+
+                // Price conversion helper: 1 kg = 1.6667 catty
+                const convertPrice = (source) => {
+                    if (source === 'kg') {
+                        if (mForm.priceKg) {
+                            mForm.priceCatty = Number((mForm.priceKg / 1.6667).toFixed(2));
+                        } else {
+                            mForm.priceCatty = '';
+                        }
+                    } else if (source === 'catty') {
+                        if (mForm.priceCatty) {
+                            mForm.priceKg = Number((mForm.priceCatty * 1.6667).toFixed(2));
+                        } else {
+                            mForm.priceKg = '';
+                        }
+                    }
+                };
+
+                // Real-time calculation of revenue in mForm
+                const calculateFormRevenue = computed(() => {
+                    if (mForm.qtyKg && mForm.priceKg) {
+                        return Math.round(mForm.qtyKg * mForm.priceKg);
+                    }
+                    return 0;
+                });
+
+                // Real-time calculation of net income (actual income) in mForm
+                const actualFormIncome = computed(() => {
+                    const gross = calculateFormRevenue.value;
+                    const deduction = Number(mForm.expenses || 0);
+                    return gross - deduction;
+                });
+
+                // Filters for Market Records
+                const filteredMarketRecords = computed(() => {
+                    return marketRecords.value.filter(rec => {
+                        if (mFilters.variety && rec.variety !== mFilters.variety) return false;
+                        if (mFilters.startDate && new Date(rec.date) < new Date(mFilters.startDate)) return false;
+                        if (mFilters.endDate && new Date(rec.date) > new Date(mFilters.endDate)) return false;
+                        return true;
+                    }).sort((a, b) => new Date(b.date) - new Date(a.date));
+                });
+
+                // Totals Calculations for Market Report (Updated with expenses & actual income)
+                const totalMarketStats = computed(() => {
+                    let totalKg = 0;
+                    let totalCatty = 0;
+                    let totalRevenue = 0;
+                    let totalExpenses = 0;
+
+                    filteredMarketRecords.value.forEach(rec => {
+                        const kg = Number(rec.qtyKg) || 0;
+                        const catty = Number(rec.qtyCatty) || 0;
+                        const price = Number(rec.priceKg) || 0;
+                        const exp = Number(rec.expenses) || 0;
+
+                        totalKg += kg;
+                        totalCatty += catty;
+                        totalRevenue += Math.round(kg * price);
+                        totalExpenses += exp;
+                    });
+
+                    // Weighted average price calculation
+                    const weightedPriceKg = totalKg > 0 ? (totalRevenue / totalKg) : 0;
+                    const weightedPriceCatty = weightedPriceKg > 0 ? (weightedPriceKg / 1.6667) : 0;
+                    const totalActualIncome = totalRevenue - totalExpenses;
+
+                    return {
+                        totalKg,
+                        totalCatty,
+                        totalRevenue,
+                        totalExpenses,
+                        totalActualIncome,
+                        weightedPriceKg,
+                        weightedPriceCatty
+                    };
+                });
+
+                // Helper to update notes dynamically when harvest options are tweaked
+                const updateHarvestNotes = () => {
+                    if (form.opType === '6') {
+                        const qty = form.harvestQty || '0';
+                        form.notes = `進行芒果果實採收作業。本日採收數量總計為：${qty} ${form.harvestUnit}，果實經初步篩選分類，品質等級多為【${form.harvestGrade}】。後續準備進場分級包裝。`;
+                    }
+                };
+
+                // Set Operation type
+                const setOperationType = (type) => {
+                    form.opType = type;
+                    if (type === '1') {
+                        form.notes = '進行蜜雪幼苗頂梢摘心(第1次定幹)，留下3條方向健壯的主枝，培養開心樹型。';
+                    } else if (type === '3') {
+                        form.pesticidePurpose = '病蟲害管理';
+                        form.pesticideName = baseData.pesticides[0] || '';
+                        form.notes = '防治嫩梢炭疽病與葉蟬危害，稀釋倍數遵照推薦倍率。';
+                    } else if (type === '4') {
+                        form.notes = '灌溉供水，保持微濕防曬，水份不累積，幫助根系呼吸。';
+                    } else if (type === '6') {
+                        form.harvestQty = '';
+                        form.harvestUnit = '公斤';
+                        form.harvestGrade = '特級品';
+                        updateHarvestNotes();
+                    } else {
+                        form.customOpName = '';
+                        form.notes = '';
+                    }
+                };
+
+                // Handle Image selection
+                const handlePhotoUpload = (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const img = new Image();
+                        img.src = event.target.result;
+                        img.onload = () => {
+                            const max_width = 500; 
+                            const max_height = 500;
+                            let width = img.width;
+                            let height = img.height;
+
+                            if (width > height) {
+                                if (width > max_width) {
+                                    height *= max_width / width;
+                                    width = max_width;
+                                }
+                            } else {
+                                if (height > max_height) {
+                                    width *= max_height / height;
+                                    height = max_height;
+                                }
+                            }
+
+                            const canvas = document.createElement('canvas');
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+
+                            form.photo = canvas.toDataURL('image/jpeg', 0.6);
+                        };
+                    };
+                    reader.readAsDataURL(file);
+                };
+
+                // Trigger zoom in modal lightbox
+                const zoomPhoto = (url) => {
+                    zoomedPhotoUrl.value = url;
+                };
+
+                // Normalize/get workers list as an array for robust listing
+                const getWorkersArray = (record) => {
+                    if (record.workers && Array.isArray(record.workers)) {
+                        return record.workers;
+                    }
+                    if (record.worker) {
+                        return [record.worker];
+                    }
+                    return [];
+                };
+
+                // Add Item to Base Lists (Improved to support newItem.market and prevent bugs)
+                const addItem = (category, field) => {
+                    const value = newItem[field].trim();
+                    if (value) {
+                        if (!baseData[category].includes(value)) {
+                            baseData[category].push(value);
+                            newItem[field] = '';
+                            saveBaseDataToStorage();
+                        }
+                    }
+                };
+
+                // Remove Item from Base Lists
+                const removeItem = (category, index) => {
+                    baseData[category].splice(index, 1);
+                    saveBaseDataToStorage();
+                };
+
+                // Save Orchard Name
+                const saveOrchardName = () => {
+                    saveBaseDataToStorage();
+                    const notification = document.createElement('div');
+                    notification.className = 'fixed top-4 right-4 bg-emerald-600 text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm font-semibold transition-opacity duration-300';
+                    notification.innerHTML = '<i class="fa-solid fa-circle-check mr-2"></i>果園名稱儲存成功！';
+                    document.body.appendChild(notification);
+                    setTimeout(() => {
+                        notification.style.opacity = '0';
+                        setTimeout(() => notification.remove(), 300);
+                    }, 2000);
+                };
+
+                // Filter States
+                const filters = reactive({
+                    block: '',
+                    variety: '',
+                    startDate: '',
+                    endDate: ''
+                });
+
+                const resetFilters = () => {
+                    filters.block = '';
+                    filters.variety = '';
+                    filters.startDate = '';
+                    filters.endDate = '';
+                };
+
+                // Filter Logic
+                const filteredRecords = computed(() => {
+                    return records.value.filter(record => {
+                        if (filters.block && record.block !== filters.block) return false;
+                        if (filters.variety && !record.varieties.includes(filters.variety)) return false;
+                        if (filters.startDate && new Date(record.date) < new Date(filters.startDate)) return false;
+                        if (filters.endDate && new Date(record.date) > new Date(filters.endDate)) return false;
+                        return true;
+                    }).sort((a, b) => new Date(b.date) - new Date(a.date));
+                });
+
+                // Icon Helpers
+                const getOpIcon = (opType) => {
+                    switch(opType) {
+                        case '1': return 'fa-solid fa-scissors';
+                        case '3': return 'fa-solid fa-spray-can-sparkles';
+                        case '4': return 'fa-solid fa-faucet-drip';
+                        case '6': return 'fa-solid fa-basket-shopping text-amber-600';
+                        default: return 'fa-solid fa-circle-info';
+                    }
+                };
+
+                const getOpName = (record) => {
+                    switch(record.opType) {
+                        case '1': return '修枝、矮化及造型定幹';
+                        case '3': return `防護施藥 - ${record.pesticidePurpose}`;
+                        case '4': return '滴灌與水份管理作業';
+                        case '6': return '果實採收收穫作業';
+                        default: return record.customOpName || '其他自訂農事';
+                    }
+                };
+
+                // Submit Form
+                const submitRecord = () => {
+                    if (form.varieties.length === 0) {
+                        alertMessage('請至少選擇一種芒果品種！');
+                        return;
+                    }
+                    if (!form.block) {
+                        alertMessage('請選擇作業區塊！');
+                        return;
+                    }
+                    if (form.workers.length === 0) {
+                        alertMessage('請至少勾選一位執行作業的人員！');
+                        return;
+                    }
+
+                    const newRecord = {
+                        id: 'rec_' + Date.now(),
+                        date: form.date,
+                        weather: form.weather,
+                        block: form.block,
+                        varieties: [...form.varieties],
+                        opType: form.opType,
+                        workers: [...form.workers], 
+                        pesticidePurpose: form.opType === '3' ? form.pesticidePurpose : '',
+                        pesticideName: form.opType === '3' ? form.pesticideName : '',
+                        harvestQty: form.opType === '6' ? form.harvestQty : '',
+                        harvestUnit: form.opType === '6' ? form.harvestUnit : '',
+                        harvestGrade: form.opType === '6' ? form.harvestGrade : '',
+                        customOpName: form.opType === '5' ? form.customOpName : '',
+                        photo: form.photo, 
+                        notes: form.notes
+                    };
+
+                    records.value.push(newRecord);
+                    saveRecordsToStorage();
+                    
+                    toastSuccess('已成功存入一筆生產履歷資料！');
+                    currentTab.value = 'records-list';
+                    
+                    form.notes = '';
+                    form.photo = '';
+                    if(form.opType === '5') form.customOpName = '';
+                };
+
+                // Submit Market record
+                const submitMarketRecord = () => {
+                    if (!mForm.block) {
+                        alertMessage('請選擇出貨生產區塊！');
+                        return;
+                    }
+
+                    const newMRecord = {
+                        id: 'mrec_' + Date.now(),
+                        date: mForm.date,
+                        market: mForm.market,
+                        block: mForm.block,
+                        variety: mForm.variety,
+                        qtyKg: Number(mForm.qtyKg),
+                        qtyCatty: Number(mForm.qtyCatty),
+                        priceKg: Number(mForm.priceKg),
+                        priceCatty: Number(mForm.priceCatty),
+                        expenses: Number(mForm.expenses || 0)
+                    };
+
+                    marketRecords.value.push(newMRecord);
+                    saveMarketRecordsToStorage();
+                    toastSuccess('已成功記錄本日出貨交易明細！');
+
+                    // Reset form values
+                    mForm.qtyKg = '';
+                    mForm.qtyCatty = '';
+                    mForm.priceKg = '';
+                    mForm.priceCatty = '';
+                    mForm.expenses = '';
+                };
+
+                const deleteMarketRecord = (id) => {
+                    if (confirm('確定要刪除此筆出貨拍賣明細紀錄嗎？')) {
+                        marketRecords.value = marketRecords.value.filter(r => r.id !== id);
+                        saveMarketRecordsToStorage();
+                        toastSuccess('自記帳紀錄已刪除');
+                    }
+                };
+
+                const resetForm = () => {
+                    form.date = getTodayDate();
+                    form.weather = '多雲';
+                    form.block = '';
+                    form.varieties = ['蜜雪'];
+                    form.opType = '1';
+                    form.workers = [];
+                    form.pesticidePurpose = '病蟲害管理';
+                    form.pesticideName = '';
+                    form.harvestQty = '';
+                    form.harvestUnit = '公斤';
+                    form.harvestGrade = '特級品';
+                    form.customOpName = '';
+                    form.photo = '';
+                    form.notes = '';
+                };
+
+                const deleteRecord = (id) => {
+                    if (confirm('確定要刪除此筆生產履歷明細紀錄嗎？刪除後將不可恢復。')) {
+                        records.value = records.value.filter(r => r.id !== id);
+                        saveRecordsToStorage();
+                        toastSuccess('紀錄已成功刪除');
+                    }
+                };
+
+                // Custom premium prompt messages
+                const alertMessage = (msg) => {
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white text-slate-800 border border-slate-200 px-6 py-4 rounded-xl shadow-2xl z-50 max-w-sm text-center';
+                    alertDiv.innerHTML = `
+                        <div class="text-rose-500 text-3xl mb-2"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <h4 class="font-bold text-lg mb-2">請注意</h4>
+                        <p class="text-sm text-slate-600 mb-4">${msg}</p>
+                        <button onclick="this.parentElement.remove()" class="bg-slate-800 text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-slate-700 transition">確定</button>
+                    `;
+                    document.body.appendChild(alertDiv);
+                };
+
+                const toastSuccess = (msg) => {
+                    const toast = document.createElement('div');
+                    toast.className = 'fixed bottom-20 md:bottom-6 right-4 bg-emerald-800 text-white border border-emerald-600 px-4 py-3 rounded-xl shadow-lg z-50 text-sm font-semibold transition-opacity duration-300 flex items-center';
+                    toast.innerHTML = `<i class="fa-solid fa-circle-check text-amber-400 mr-2.5 text-lg animate-bounce"></i> ${msg}`;
+                    document.body.appendChild(toast);
+                    setTimeout(() => {
+                        toast.style.opacity = '0';
+                        setTimeout(() => toast.remove(), 300);
+                    }, 3000);
+                };
+
+                // Storage Management
+                const saveBaseDataToStorage = () => {
+                    localStorage.setItem('mango_app_base_data_v2', JSON.stringify(baseData));
+                };
+
+                const saveRecordsToStorage = () => {
+                    localStorage.setItem('mango_app_records_v2', JSON.stringify(records.value));
+                };
+
+                const saveMarketRecordsToStorage = () => {
+                    localStorage.setItem('mango_app_market_records_v2', JSON.stringify(marketRecords.value));
+                };
+
+                const loadFromStorage = () => {
+                    const savedBase = localStorage.getItem('mango_app_base_data_v2');
+                    if (savedBase) {
+                        const parsed = JSON.parse(savedBase);
+                        Object.assign(baseData, parsed);
+                        // Backwards compatibility check for markets array
+                        if (!baseData.markets) {
+                            baseData.markets = ['台北一', '台北二', '三重', '台中', '高雄', '屏東', '外銷-日本'];
+                        }
+                    }
+                    const savedRecords = localStorage.getItem('mango_app_records_v2');
+                    if (savedRecords) {
+                        records.value = JSON.parse(savedRecords);
+                    } else {
+                        // Demo records prepopulated
+                        records.value = [
+                            {
+                                id: 'demo1',
+                                date: getTodayDate(),
+                                weather: '晴天',
+                                block: 'A區-蜜雪幼苗區',
+                                varieties: ['蜜雪'],
+                                opType: '1',
+                                workers: ['阿昌 (班長)', '美玲'],
+                                notes: '幼苗8個月，目前已有新一輪梢成熟。進行主幹適度整枝，留下3條方向健壯的主枝，多餘徒長芽一併修剪移除。',
+                                photo: ''
+                            },
+                            {
+                                id: 'demo2',
+                                date: getTodayDate(),
+                                weather: '陣雨',
+                                block: 'A區-蜜雪幼苗區',
+                                varieties: ['蜜雪'],
+                                opType: '3',
+                                workers: ['陳大哥'],
+                                pesticidePurpose: '病蟲害管理',
+                                pesticideName: '亞托敏 (炭疽病防護)',
+                                notes: '雨後高溫濕潤，易誘發炭疽病。使用動力噴霧機對蜜雪幼苗全株葉片進行防護噴灑。',
+                                photo: ''
+                            }
+                        ];
+                    }
+
+                    // Load market price records
+                    const savedMarketRecords = localStorage.getItem('mango_app_market_records_v2');
+                    if (savedMarketRecords) {
+                        marketRecords.value = JSON.parse(savedMarketRecords);
+                    } else {
+                        // Prepopulate default market records for preview with simulated expenses
+                        marketRecords.value = [
+                            {
+                                id: 'mdemo1',
+                                date: getTodayDate(),
+                                market: '外銷-日本',
+                                block: 'A區-蜜雪幼苗區',
+                                variety: '蜜雪',
+                                qtyKg: 120,
+                                qtyCatty: 200,
+                                priceKg: 280, // Export premium price
+                                priceCatty: 168,
+                                expenses: 8500 // Packing, custom, logistics fee
+                            },
+                            {
+                                id: 'mdemo2',
+                                date: getTodayDate(),
+                                market: '台北二',
+                                block: 'B區-愛文老樹區',
+                                variety: '愛文',
+                                qtyKg: 300,
+                                qtyCatty: 500,
+                                priceKg: 95,
+                                priceCatty: 57,
+                                expenses: 2500
+                            }
+                        ];
+                    }
+                };
+
+                // Export to CSV helper for orchard logs
+                const exportCSV = () => {
+                    let csvContent = "\uFEFF"; // BOM UTF-8
+                    csvContent += "作業日期,天氣,作業區塊,芒果品種,作業項目,施藥/採收目的,施用配方/採收產量,執行人員,作業詳細備註\r\n";
+
+                    filteredRecords.value.forEach(r => {
+                        const varietiesStr = r.varieties.join(';');
+                        const opName = getOpName(r);
+                        const workersStr = getWorkersArray(r).join(';');
+                        const cleanNotes = (r.notes || '').replace(/"/g, '""');
+                        
+                        let detailColumn = '';
+                        let purposeColumn = '';
+                        if (r.opType === '3') {
+                            purposeColumn = r.pesticidePurpose || '';
+                            detailColumn = r.pesticideName || '';
+                        } else if (r.opType === '6') {
+                            purposeColumn = r.harvestGrade || '特級品';
+                            detailColumn = `${r.harvestQty || '0'} ${r.harvestUnit || '公斤'}`;
+                        }
+
+                        csvContent += `"${r.date}","${r.weather}","${r.block}","${varietiesStr}","${opName}","${purposeColumn}","${detailColumn}","${workersStr}","${cleanNotes}"\r\n`;
+                    });
+
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement("a");
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute("href", url);
+                    link.setAttribute("download", `芒果生產履歷報表_${getTodayDate()}.csv`);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                };
+
+                // Export to CSV helper for market auction logs
+                const exportMarketCSV = () => {
+                    let csvContent = "\uFEFF"; // BOM UTF-8
+                    csvContent += "交易日期,批發市場,出貨生產區塊,芒果品種,交易量(公斤),交易量(台斤),拍賣成交價(元/公斤),拍賣成交價(元/台斤),收益總計(元),扣除事務費(元),當日實際純收入(元)\r\n";
+
+                    filteredMarketRecords.value.forEach(r => {
+                        const grossRevenue = Math.round(r.qtyKg * r.priceKg);
+                        const expenses = Number(r.expenses || 0);
+                        const netIncome = grossRevenue - expenses;
+                        csvContent += `"${r.date}","${r.market}","${r.block}","${r.variety}","${r.qtyKg}","${r.qtyCatty}","${r.priceKg}","${r.priceCatty}","${grossRevenue}","${expenses}","${netIncome}"\r\n`;
+                    });
+
+                    // Append total summary row to CSV
+                    const stats = totalMarketStats.value;
+                    csvContent += `\r\n"全期加總/加權平均",,"合計",,"${stats.totalKg}","${stats.totalCatty}","${stats.weightedPriceKg.toFixed(1)}","${stats.weightedPriceCatty.toFixed(1)}","${stats.totalRevenue}","${stats.totalExpenses}","${stats.totalActualIncome}"\r\n`;
+
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement("a");
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute("href", url);
+                    link.setAttribute("download", `芒果出貨自記帳紀錄_${getTodayDate()}.csv`);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                };
+
+                const printResume = () => {
+                    window.print();
+                };
+
+                onMounted(() => {
+                    updateWeatherTime();
+                    loadFromStorage();
+                    setOperationType('1');
+                    mForm.block = baseData.blocks[0] || '';
+                });
+
+                return {
+                    varietiesList,
+                    tabs,
+                    currentTab,
+                    zoomedPhotoUrl,
+                    weatherData,
+                    isRefreshingWeather,
+                    refreshWeather,
+                    baseData,
+                    newItem,
+                    addItem,
+                    removeItem,
+                    saveOrchardName,
+                    records,
+                    marketRecords,
+                    form,
+                    mForm,
+                    mFilters,
+                    mockAmisPrices,
+                    resetMFilters,
+                    convertWeight,
+                    convertPrice,
+                    calculateFormRevenue,
+                    actualFormIncome,
+                    filteredMarketRecords,
+                    totalMarketStats,
+                    setOperationType,
+                    handlePhotoUpload,
+                    zoomPhoto,
+                    getWorkersArray,
+                    updateHarvestNotes,
+                    submitRecord,
+                    submitMarketRecord,
+                    deleteMarketRecord,
+                    resetForm,
+                    deleteRecord,
+                    filters,
+                    resetFilters,
+                    filteredRecords,
+                    getOpIcon,
+                    getOpName,
+                    exportCSV,
+                    exportMarketCSV,
+                    printResume,
+                    getTodayDate
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
